@@ -47,9 +47,15 @@ TagManager:
   - name: Creeper
     uniqueID: 557745841
     locked: 0
+  - name: Edge
+    uniqueID: 3025387653
+    locked: 0
   - name: OtherUnits
     uniqueID: 2855263197
     locked: 0
   - name: CommandBase
     uniqueID: 3989543895
+    locked: 0
+  - name: UI
+    uniqueID: 758901657
     locked: 0

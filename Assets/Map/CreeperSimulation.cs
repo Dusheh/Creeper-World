@@ -22,11 +22,11 @@ public class CreeperSimulation
 {
     private int[,] _data;
 
-    private int width, height;
+    private readonly int width, height;
 
-    private ulong creeperTotal;
+    private long creeperTotal;
 
-    public ulong CreeperTotal { get { return creeperTotal; } }
+    public long CreeperTotal { get { return creeperTotal; } }
 
     [Range(0, 0.25f)]
     private float flowRate;
@@ -106,6 +106,7 @@ public class CreeperSimulation
     {
         var DataClone = new int[width, height];
         int flowTotal, flowTemp;
+        var Heights = GameSpace.instance.Terrain.terrain.Height;
         for (int i = 0; i < width; i++)
         {
             for (int j = 0; j < height; j++)
@@ -114,38 +115,77 @@ public class CreeperSimulation
                 flowTemp = (int)(_data[i, j] * flowRate);
                 if (i > 0)
                 {
-                    if (true || _data[i - 1, j] < _data[i, j])
+                    int flow = 0;
+                    if (Heights[i - 1, j] > Heights[i, j])
                     {
-                        DataClone[i - 1, j] += flowTemp;
-                        flowTotal += flowTemp;
+                        var temp = (_data[i, j] - (Heights[i - 1, j] - Heights[i, j])) * flowRate;
+                        if (temp > 0)
+                        {
+                            flow = (int)temp;
+                        }
                     }
+                    else
+                    {
+                        flow = flowTemp;
+                    }
+                    DataClone[i - 1, j] += flow;
+                    flowTotal += flow;
                 }
                 if (i < width - 1)
                 {
-                    if (true || _data[i + 1, j] < _data[i, j])
+                    int flow = 0;
+                    if (Heights[i + 1, j] > Heights[i, j])
                     {
-                        DataClone[i + 1, j] += flowTemp;
-                        flowTotal += flowTemp;
+                        var temp = (_data[i, j] - (Heights[i + 1, j] - Heights[i, j])) * flowRate;
+                        if (temp > 0)
+                        {
+                            flow = (int)temp;
+                        }
                     }
+                    else
+                    {
+                        flow = flowTemp;
+                    }
+                    DataClone[i + 1, j] += flow;
+                    flowTotal += flow;
                 }
                 if (j > 0)
                 {
-                    if (true || _data[i, j - 1] < _data[i, j])
+                    int flow = 0;
+                    if (Heights[i, j - 1] > Heights[i, j])
                     {
-                        DataClone[i, j - 1] += flowTemp;
-                        flowTotal += flowTemp;
+                        var temp = (_data[i, j] - (Heights[i, j - 1] - Heights[i, j])) * flowRate;
+                        if (temp > 0)
+                        {
+                            flow = (int)temp;
+                        }
                     }
+                    else
+                    {
+                        flow = flowTemp;
+                    }
+                    DataClone[i, j - 1] += flow;
+                    flowTotal += flow;
                 }
                 if (j < height - 1)
                 {
-                    if (true || _data[i, j + 1] < _data[i, j])
+                    int flow = 0;
+                    if (Heights[i, j + 1] > Heights[i, j])
                     {
-                        DataClone[i, j + 1] += flowTemp;
-                        flowTotal += flowTemp;
+                        var temp = (_data[i, j] - (Heights[i, j + 1] - Heights[i, j])) * flowRate;
+                        if (temp > 0)
+                        {
+                            flow = (int)temp;
+                        }
                     }
+                    else
+                    {
+                        flow = flowTemp;
+                    }
+                    DataClone[i, j + 1] += flow;
+                    flowTotal += flow;
                 }
                 DataClone[i, j] += _data[i, j] - flowTotal;
-
             }
         }
         creeperTotal = 0;
@@ -154,7 +194,7 @@ public class CreeperSimulation
         {
             for (int j = 0; j < height; j++)
             {
-                creeperTotal += (ulong)DataClone[i, j];
+                creeperTotal += (long)DataClone[i, j];
             }
         }
         _data = DataClone;
@@ -171,18 +211,30 @@ public class CreeperSimulation
                 position.x = i - width / 2;
                 position.y = j - height / 2;
 
+                RenderTask Temp = (RenderTask)renderer.executor.GetTemp();
+                if (Temp == null) Temp = new();
+
                 if (_data[i, j] == 0)
                 {
-                    renderer.executor.tasks.Add(new CreeperRenderer.RenderTask(position, Color.white));
+                    Temp.position = position;
+                    Temp.color = Color.white;
+                    Temp.tile = null;
+                    renderer.executor.tasks.Add(Temp);
                 }
                 else if (_data[i, j] > 0)
                 {
-                    renderer.executor.tasks.Add(
-                        new CreeperRenderer.RenderTask(
-                            position,
-                            renderer.CreeperColor * Mathf.Clamp(_data[i, j], 0.0f, 20000000.0f) / 1000000.0f)
-                        );
+					Temp.position = position;
+					Temp.color = renderer.CreeperColor * (Mathf.Clamp(_data[i, j], 0.0f, 20000000.0f) / 1000000.0f + 0.2f);
+					Temp.tile = GameSpace.instance.creeperRenderer.tileBase;
+                    renderer.executor.tasks.Add(Temp);
                 }
+                else
+                {
+					Temp.position = position;
+                    Temp.color = renderer.AntiCreeperColor * (Mathf.Clamp(-_data[i, j], 0.0f, 20000000.0f) / 1000000.0f + 0.2f);
+					Temp.tile = GameSpace.instance.creeperRenderer.tileBase;
+                    renderer.executor.tasks.Add(Temp);
+				}
             }
         }
     }

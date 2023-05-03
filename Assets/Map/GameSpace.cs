@@ -23,19 +23,36 @@ public class GameSpace : MonoBehaviour
 		get { return height; }
 	}
 
+	public float FlowRate 
+	{
+		get
+		{
+			return simulation.FlowRate;
+		}
+		set
+		{
+			simulation.FlowRate = value;
+		}
+	}
+
+	public float flowRate;
+
 	public void Awake()
 	{
 		instance = this;
 		width = 32;
 		height = 32;
 		simulation = new CreeperSimulation(width, height);
-		simulation.FlowRate = 0.19f;
+		simulation.FlowRate = 0.08f;
 		creeperRenderer.simulation = simulation;
 	}
 
 	public void FixedUpdate()
 	{
+		FlowRate = flowRate;
 		simulation.Update();
 		simulation.Render(creeperRenderer);
+
+		Edge.Update();
 	}
 }
